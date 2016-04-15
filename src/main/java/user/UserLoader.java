@@ -1,9 +1,11 @@
 package user;
 
-import java.io.IOException;
+import java.util.List;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.Datastore;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.core.Handler;
@@ -15,39 +17,30 @@ public class UserLoader implements Handler<RoutingContext> {
 	@Override
 	public void handle(RoutingContext ctxt) {
 		// TODO Auto-generated method stub
-		UserDetails ud = new UserDetails();
+		
+		Datastore dataStore = ServicesFactory.getMongoDB();
 		
 		String id = ctxt.request().getParam("id");
 		
-		ud.setId(Integer.parseInt(id));
-		
-		ud.setName("Paramananda");
-
 		HttpServerResponse response=ctxt.response();
-
 		response.putHeader("content-type", "application/json");
-		
-		ObjectMapper mapper = new ObjectMapper();
 
+		ObjectId oid = null;
 		try {
-			response.end(mapper.writeValueAsString(ud));
-			return;
-		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			response.end("{\"Error\" : \""+e.toString()+"\" }");
-			return;
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			response.end("{\"Error\" : \""+e.toString()+"\" }");
-			return;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			response.end("{\"Error\" : \""+e.toString()+"\" }");
-			return;
+			oid = new ObjectId(id);
+		} catch (Exception e) {			
 		}
+		
+        List<User> users = dataStore.createQuery(User.class).field("id").equal(oid).asList();
+        if (users.size() != 0) {
+                UserDTO dto = new UserDTO().fillFromModel(users.get(0));
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode node = mapper.valueToTree(dto);
+                response.end(node.toString());
+        } else {
+                response.setStatusCode(404).end("not found");
+        }
+	
 	}
 
 }
