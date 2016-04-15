@@ -2,7 +2,7 @@
 FROM vertx/vertx3
 
 #                                                       
-ENV VERTICLE_NAME com.cisco.cmad.vertx.MyRouter
+ENV VERTICLE_NAME vertx.MyRouter
 ENV VERTICLE_FILE target/vertx-0.0.1-SNAPSHOT.jar
 
 # Set the location of the verticles
